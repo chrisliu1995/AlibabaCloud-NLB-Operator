@@ -1,0 +1,115 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: alibabacloud-nlb-operator-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: alibabacloud-nlb-operator-controller-manager
+  namespace: alibabacloud-nlb-operator-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: alibabacloud-nlb-operator-manager-role
+rules:
+  - apiGroups:
+      - nlboperator.alibabacloud.com
+    resources:
+      - nlbs
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - nlboperator.alibabacloud.com
+    resources:
+      - nlbs/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - nlboperator.alibabacloud.com
+    resources:
+      - nlbs/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: alibabacloud-nlb-operator-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: alibabacloud-nlb-operator-manager-role
+subjects:
+  - kind: ServiceAccount
+    name: alibabacloud-nlb-operator-controller-manager
+    namespace: alibabacloud-nlb-operator-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: alibabacloud-nlb-operator-leader-election-role
+  namespace: alibabacloud-nlb-operator-system
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: alibabacloud-nlb-operator-leader-election-rolebinding
+  namespace: alibabacloud-nlb-operator-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: alibabacloud-nlb-operator-leader-election-role
+subjects:
+  - kind: ServiceAccount
+    name: alibabacloud-nlb-operator-controller-manager
+    namespace: alibabacloud-nlb-operator-system

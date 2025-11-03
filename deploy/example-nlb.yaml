@@ -1,0 +1,44 @@
+---
+apiVersion: nlboperator.alibabacloud.com/v1
+kind: NLB
+metadata:
+  name: example-nlb
+  namespace: default
+spec:
+  # Optional: loadBalancerName: example-nlb-instance
+  addressType: Internet  # Required: Internet or Intranet
+  # Optional: addressIpVersion: ipv4
+  vpcId: vpc-xxxxxx  # Required: Replace with your VPC ID
+  zoneMappings:  # Required: At least 2 zones
+    - zoneId: cn-hangzhou-h  # Replace with your zone ID
+      vSwitchId: vsw-xxxxxx   # Replace with your vSwitch ID
+      # Optional: allocationId: eip-xxxxx
+      # Optional: privateIPv4Address: 192.168.1.10
+    - zoneId: cn-hangzhou-i  # Replace with your zone ID
+      vSwitchId: vsw-yyyyyy   # Replace with your vSwitch ID
+      # Optional: allocationId: eip-yyyyy
+      # Optional: privateIPv4Address: 192.168.2.10
+  # Optional: resourceGroupId: rg-xxxxx
+  # Optional: securityGroupIds:
+  #   - sg-xxxxx  # Replace with your security group ID
+  # Optional: bandwidthPackageId: bwp-xxxxx
+  # Optional: deletionProtection:
+  #   enabled: true
+  #   reason: "Managed by NLB Operator"
+  # Optional: modificationProtection:
+  #   status: ConsoleProtection
+  #   reason: "Managed by NLB Operator"
+  tags:
+    - key: ManagedBy
+      value: okg
+  # Optional: listeners:
+  #   - listenerProtocol: TCP
+  #     listenerPort: 80
+  #     serverGroupId: sgp-xxxxx  # Replace with your server group ID
+  #     listenerDescription: "HTTP listener"
+  #     idleTimeout: 900
+  #   - listenerProtocol: TCP
+  #     listenerPort: 443
+  #     serverGroupId: sgp-yyyyy  # Replace with your server group ID
+  #     listenerDescription: "HTTPS listener"
+  #     idleTimeout: 900

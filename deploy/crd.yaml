@@ -1,0 +1,243 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: nlbs.nlboperator.alibabacloud.com
+spec:
+  group: nlboperator.alibabacloud.com
+  names:
+    kind: NLB
+    listKind: NLBList
+    plural: nlbs
+    singular: nlb
+    shortNames:
+      - nlb
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - addressType
+                - vpcId
+                - zoneMappings
+              properties:
+                loadBalancerName:
+                  type: string
+                  description: The name of the NLB instance
+                addressType:
+                  type: string
+                  description: The network type of the NLB instance
+                  enum:
+                    - Internet
+                    - Intranet
+                  default: Internet
+                addressIpVersion:
+                  type: string
+                  description: The IP version of the NLB instance
+                  enum:
+                    - ipv4
+                    - DualStack
+                  default: ipv4
+                vpcId:
+                  type: string
+                  description: The VPC ID where the NLB instance resides
+                zoneMappings:
+                  type: array
+                  minItems: 2
+                  description: The zones and vSwitches for the NLB instance
+                  items:
+                    type: object
+                    required:
+                      - zoneId
+                      - vSwitchId
+                    properties:
+                      zoneId:
+                        type: string
+                        description: The zone ID
+                      vSwitchId:
+                        type: string
+                        description: The vSwitch ID
+                      allocationId:
+                        type: string
+                        description: The EIP allocation ID for Internet NLB
+                      privateIPv4Address:
+                        type: string
+                        description: The private IP address
+                resourceGroupId:
+                  type: string
+                  description: The resource group ID
+                securityGroupIds:
+                  type: array
+                  description: The security group IDs
+                  items:
+                    type: string
+                bandwidthPackageId:
+                  type: string
+                  description: The bandwidth package ID for Internet NLB
+                deletionProtection:
+                  type: object
+                  description: Deletion protection configuration
+                  properties:
+                    enabled:
+                      type: boolean
+                      description: Whether deletion protection is enabled
+                    reason:
+                      type: string
+                      description: The reason for enabling deletion protection
+                modificationProtection:
+                  type: object
+                  description: Modification protection configuration
+                  properties:
+                    status:
+                      type: string
+                      description: The modification protection status
+                      enum:
+                        - ConsoleProtection
+                        - NonProtection
+                    reason:
+                      type: string
+                      description: The reason for modification protection
+                tags:
+                  type: array
+                  description: The tags to be added to the NLB instance
+                  items:
+                    type: object
+                    required:
+                      - key
+                      - value
+                    properties:
+                      key:
+                        type: string
+                        description: The tag key
+                      value:
+                        type: string
+                        description: The tag value
+                listeners:
+                  type: array
+                  description: The listeners for the NLB instance
+                  items:
+                    type: object
+                    required:
+                      - listenerProtocol
+                      - listenerPort
+                      - serverGroupId
+                    properties:
+                      listenerProtocol:
+                        type: string
+                        description: The protocol of the listener
+                        enum:
+                          - TCP
+                          - UDP
+                          - TCPSSL
+                      listenerPort:
+                        type: integer
+                        minimum: 1
+                        maximum: 65535
+                        description: The listening port
+                      serverGroupId:
+                        type: string
+                        description: The backend server group ID
+                      listenerDescription:
+                        type: string
+                        description: The description of the listener
+                      idleTimeout:
+                        type: integer
+                        minimum: 1
+                        maximum: 900
+                        default: 900
+                        description: The idle connection timeout in seconds
+                      securityPolicyId:
+                        type: string
+                        description: The security policy ID for TCPSSL
+                      certificateIds:
+                        type: array
+                        description: The certificate IDs for TCPSSL
+                        items:
+                          type: string
+                      caCertificateIds:
+                        type: array
+                        description: The CA certificate IDs
+                        items:
+                          type: string
+                      caEnabled:
+                        type: boolean
+                        description: Whether CA verification is enabled
+                      proxyProtocolEnabled:
+                        type: boolean
+                        description: Whether proxy protocol is enabled
+            status:
+              type: object
+              properties:
+                loadBalancerId:
+                  type: string
+                  description: The ID of the NLB instance
+                dnsName:
+                  type: string
+                  description: The DNS name of the NLB instance
+                loadBalancerStatus:
+                  type: string
+                  description: The status of the NLB instance
+                conditions:
+                  type: array
+                  description: The latest available observations of the NLB's state
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        description: Type of condition
+                      status:
+                        type: string
+                        description: Status of the condition
+                      reason:
+                        type: string
+                        description: Reason for the condition's last transition
+                      message:
+                        type: string
+                        description: Human-readable message
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                        description: Last time the condition transitioned
+                      observedGeneration:
+                        type: integer
+                        description: Observed generation
+                listenerStatus:
+                  type: array
+                  description: The status of each listener
+                  items:
+                    type: object
+                    required:
+                      - listenerPort
+                    properties:
+                      listenerPort:
+                        type: integer
+                        description: The listening port
+                      listenerId:
+                        type: string
+                        description: The ID of the listener
+                      status:
+                        type: string
+                        description: The status of the listener
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: LoadBalancerId
+          type: string
+          jsonPath: .status.loadBalancerId
+        - name: DNSName
+          type: string
+          jsonPath: .status.dnsName
+        - name: Status
+          type: string
+          jsonPath: .status.loadBalancerStatus
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp

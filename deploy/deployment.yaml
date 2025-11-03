@@ -1,0 +1,78 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alibabacloud-nlb-operator-controller-manager
+  namespace: alibabacloud-nlb-operator-system
+  labels:
+    control-plane: controller-manager
+spec:
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        control-plane: controller-manager
+    spec:
+      serviceAccountName: alibabacloud-nlb-operator-controller-manager
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: manager
+          image: registry.cn-beijing.aliyuncs.com/chrisliu95/alibabacloud-nlb-operator:v0.1
+          imagePullPolicy: IfNotPresent
+          command:
+            - /manager
+          args:
+            - --leader-elect
+          env:
+            - name: ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: alibaba-cloud-credentials
+                  key: accessKeyId
+            - name: ACCESS_KEY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: alibaba-cloud-credentials
+                  key: accessKeySecret
+            - name: REGION_ID
+              value: "cn-hangzhou"  # Replace with your region
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+      terminationGracePeriodSeconds: 10
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alibaba-cloud-credentials
+  namespace: alibabacloud-nlb-operator-system
+type: Opaque
+data:
+  # Base64 encoded values
+  # Replace with your actual credentials
+  # Example: echo -n 'your-access-key-id' | base64
+  # Example: echo -n 'your-access-key-secret' | base64
+  accessKeyId: <your-base64-encoded-access-key-id>
+  accessKeySecret: <your-base64-encoded-access-key-secret>

@@ -1,0 +1,17 @@
+# Build stage - copy CA certificates from a base image
+FROM node:18-alpine AS certs
+
+# Final stage - minimal image with certificates
+FROM scratch
+
+WORKDIR /
+
+# Copy CA certificates from certs stage
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+# Copy the pre-built binary
+COPY bin/alibabacloud-nlb-operator-manager /manager
+
+USER 65532:65532
+
+ENTRYPOINT ["/manager"]
