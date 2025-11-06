@@ -34,9 +34,10 @@ const (
 // NLBReconciler reconciles an NLB object
 type NLBReconciler struct {
 	client.Client
-	Scheme    *runtime.Scheme
-	Recorder  record.EventRecorder
-	NLBClient *provider.NLBClient
+	Scheme                  *runtime.Scheme
+	Recorder                record.EventRecorder
+	NLBClient               *provider.NLBClient
+	MaxConcurrentReconciles int
 }
 
 // +kubebuilder:rbac:groups=nlboperator.alibabacloud.com,resources=nlbs,verbs=get;list;watch;create;update;patch;delete
@@ -307,10 +308,15 @@ func (r *NLBReconciler) updateCondition(ctx context.Context, nlb *nlbv1.NLB, con
 
 // SetupWithManager sets up the controller with the Manager
 func (r *NLBReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	maxConcurrent := r.MaxConcurrentReconciles
+	if maxConcurrent <= 0 {
+		maxConcurrent = 1
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nlbv1.NLB{}).
 		WithOptions(controller.Options{
-			MaxConcurrentReconciles: 1,
+			MaxConcurrentReconciles: maxConcurrent,
 		}).
 		Complete(r)
 }
