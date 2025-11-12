@@ -10,6 +10,7 @@ GO ?= go
 GOOS ?= linux
 GOARCH ?= amd64
 CGO_ENABLED ?= 0
+GOTOOLCHAIN ?= local
 
 # Binary name
 BINARY_NAME = alibabacloud-nlb-operator-manager
@@ -20,29 +21,29 @@ all: build
 .PHONY: build
 build: fmt vet
 	@echo "Building $(BINARY_NAME)..."
-	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) $(GO) build \
+	GOTOOLCHAIN=$(GOTOOLCHAIN) CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) $(GO) build \
 		-o bin/$(BINARY_NAME) \
 		./cmd/manager/main.go
 
 .PHONY: run
 run: fmt vet
 	@echo "Running $(BINARY_NAME)..."
-	$(GO) run ./cmd/manager/main.go
+	GOTOOLCHAIN=$(GOTOOLCHAIN) $(GO) run ./cmd/manager/main.go
 
 .PHONY: fmt
 fmt:
 	@echo "Running go fmt..."
-	$(GO) fmt ./...
+	GOTOOLCHAIN=$(GOTOOLCHAIN) $(GO) fmt ./...
 
 .PHONY: vet
 vet:
 	@echo "Running go vet..."
-	$(GO) vet ./...
+	GOTOOLCHAIN=$(GOTOOLCHAIN) $(GO) vet ./...
 
 .PHONY: test
 test: fmt vet
 	@echo "Running tests..."
-	$(GO) test ./... -coverprofile cover.out
+	GOTOOLCHAIN=$(GOTOOLCHAIN) $(GO) test ./... -coverprofile cover.out
 
 .PHONY: docker-build
 docker-build:

@@ -21,12 +21,13 @@ spec:
         runAsNonRoot: true
       containers:
         - name: manager
-          image: registry.cn-beijing.aliyuncs.com/chrisliu95/alibabacloud-nlb-operator:v0.1
+          image: registry.cn-beijing.aliyuncs.com/chrisliu95/alibabacloud-nlb-operator:v0.1.0
           imagePullPolicy: IfNotPresent
           command:
             - /manager
           args:
             - --leader-elect
+            - --max-concurrent-reconciles=5
           env:
             - name: ACCESS_KEY_ID
               valueFrom:

@@ -240,9 +240,10 @@ kubectl describe nlb example-nlb
 
 ### 常见问题
 
-1. **NLB 创建失败**: 检查 VPC、vSwitch、安全组配置是否正确
-2. **权限不足**: 检查 AccessKey 是否具有 NLB 操作权限
-3. **监听器创建失败**: 检查服务器组 ID 是否存在
+- **NLB 创建失败**: 检查 VPC、vSwitch、安全组配置是否正确
+- **权限不足**: 检查 AccessKey 是否具有 NLB 操作权限
+- **监听器创建失败**: 检查服务器组 ID 是否存在
+- **Go 版本兼容性**: 使用 `make build` 构建，已配置 GOTOOLCHAIN=local
 
 ## 贡献指南
 
