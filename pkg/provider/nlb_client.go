@@ -9,6 +9,7 @@ import (
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	nlbsdk "github.com/alibabacloud-go/nlb-20220430/v4/client"
 	"github.com/alibabacloud-go/tea/tea"
+	"golang.org/x/time/rate"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog/v2"
 
@@ -23,6 +24,14 @@ const (
 // NLBClient provides methods to interact with Alibaba Cloud NLB OpenAPI
 type NLBClient struct {
 	client *nlbsdk.Client
+
+	// GetListenerLimiter applies a local interface-level token-bucket rate limit
+	// to GetListenerAttribute calls. When nil, no local limiting is applied.
+	GetListenerLimiter *rate.Limiter
+
+	// CreateListenerLimiter applies a local interface-level token-bucket rate limit
+	// to CreateNLBListener calls. When nil, no local limiting is applied.
+	CreateListenerLimiter *rate.Limiter
 }
 
 // NewNLBClient creates a new NLBClient
@@ -263,7 +272,7 @@ func (c *NLBClient) JoinSecurityGroup(ctx context.Context, lbId string, security
 }
 
 // CreateListener creates a listener for the NLB instance
-func (c *NLBClient) CreateListener(ctx context.Context, lbId string, listener *nlbv1.ListenerSpec) (string, error) {
+func (c *NLBClient) CreateListener(ctx context.Context, lbId string, listener *nlbv1.LegacyListenerSpec) (string, error) {
 	req := &nlbsdk.CreateListenerRequest{
 		LoadBalancerId:   tea.String(lbId),
 		ListenerProtocol: tea.String(listener.ListenerProtocol),
