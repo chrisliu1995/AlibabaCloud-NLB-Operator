@@ -78,10 +78,6 @@ type NLBSpec struct {
 	// Tags are the tags to be added to the NLB instance
 	// +optional
 	Tags []Tag `json:"tags,omitempty"`
-
-	// Listeners specifies the listeners for the NLB instance
-	// +optional
-	Listeners []ListenerSpec `json:"listeners,omitempty"`
 }
 
 // ZoneMapping defines the zone and vSwitch configuration
@@ -132,8 +128,9 @@ type Tag struct {
 	Value string `json:"value"`
 }
 
-// ListenerSpec defines the listener configuration
-type ListenerSpec struct {
+// LegacyListenerSpec defines the listener configuration
+// Retained for SDK compatibility - used by NLBPool Operator
+type LegacyListenerSpec struct {
 	// ListenerProtocol is the protocol of the listener
 	// Valid values: TCP, UDP, TCPSSL
 	// +kubebuilder:validation:Enum=TCP;UDP;TCPSSL
@@ -190,29 +187,24 @@ type NLBStatus struct {
 	DNSName string `json:"dnsName,omitempty"`
 
 	// LoadBalancerStatus is the status of the NLB instance
-	// Valid values: Provisioning, Active, Configuring, CreateFailed
+	// Valid values: Provisioning, Active, Failed
 	// +optional
 	LoadBalancerStatus string `json:"loadBalancerStatus,omitempty"`
+
+	// Eips contains the EIP information for each zone
+	// +optional
+	Eips []EIPInfo `json:"eips,omitempty"`
 
 	// Conditions represent the latest available observations of the NLB's state
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
-
-	// ListenerStatus contains the status of each listener
-	// +optional
-	ListenerStatus []ListenerStatus `json:"listenerStatus,omitempty"`
 }
 
-// ListenerStatus defines the status of a listener
-type ListenerStatus struct {
-	// ListenerPort is the listening port
-	ListenerPort int32 `json:"listenerPort"`
+// EIPInfo defines the EIP information for a zone
+type EIPInfo struct {
+	// ZoneId is the zone ID
+	ZoneId string `json:"zoneId"`
 
-	// ListenerId is the ID of the listener
-	// +optional
-	ListenerId string `json:"listenerId,omitempty"`
-
-	// Status is the status of the listener
-	// +optional
-	Status string `json:"status,omitempty"`
+	// IP is the EIP address
+	IP string `json:"ip"`
 }

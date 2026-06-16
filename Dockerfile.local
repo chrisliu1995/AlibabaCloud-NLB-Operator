@@ -1,0 +1,5 @@
+FROM alpine:3.18
+COPY ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY manager /manager
+USER 65532:65532
+ENTRYPOINT ["/manager"]

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 
+	"golang.org/x/time/rate"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -36,6 +37,8 @@ func main() {
 		regionId                string
 		endpoint                string
 		maxConcurrentReconciles int
+		getListenerQPS          float64
+		createListenerQPS       float64
 	)
 
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
@@ -48,6 +51,8 @@ func main() {
 	flag.StringVar(&accessKeySecret, "access-key-secret", os.Getenv("ACCESS_KEY_SECRET"), "Alibaba Cloud Access Key Secret")
 	flag.StringVar(&regionId, "region-id", os.Getenv("REGION_ID"), "Alibaba Cloud Region ID")
 	flag.StringVar(&endpoint, "endpoint", "", "Alibaba Cloud NLB API endpoint")
+	flag.Float64Var(&getListenerQPS, "get-listener-qps", 18.0, "Local QPS limit for GetListenerAttribute API (token-bucket, burst=5)")
+	flag.Float64Var(&createListenerQPS, "create-listener-qps", 3.0, "Local QPS limit for CreateListener API (token-bucket, burst=5)")
 
 	opts := zap.Options{
 		Development: true,
@@ -81,6 +86,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Initialize per-interface local rate limiter for GetListenerAttribute.
+	nlbClient.GetListenerLimiter = rate.NewLimiter(rate.Limit(getListenerQPS), 5)
+	// Initialize per-interface local rate limiter for CreateListener.
+	nlbClient.CreateListenerLimiter = rate.NewLimiter(rate.Limit(createListenerQPS), 5)
+
 	// Setup NLB controller
 	if err = (&controller.NLBReconciler{
 		Client:                  mgr.GetClient(),
@@ -90,6 +100,30 @@ func main() {
 		MaxConcurrentReconciles: maxConcurrentReconciles,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NLB")
+		os.Exit(1)
+	}
+
+	// Setup ServerGroup controller
+	if err = (&controller.ServerGroupReconciler{
+		Client:                  mgr.GetClient(),
+		Scheme:                  mgr.GetScheme(),
+		Recorder:                mgr.GetEventRecorderFor("servergroup-controller"),
+		NLBClient:               nlbClient,
+		MaxConcurrentReconciles: maxConcurrentReconciles,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ServerGroup")
+		os.Exit(1)
+	}
+
+	// Setup Listener controller
+	if err = (&controller.ListenerReconciler{
+		Client:                  mgr.GetClient(),
+		Scheme:                  mgr.GetScheme(),
+		Recorder:                mgr.GetEventRecorderFor("listener-controller"),
+		NLBClient:               nlbClient,
+		MaxConcurrentReconciles: maxConcurrentReconciles,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Listener")
 		os.Exit(1)
 	}
 
