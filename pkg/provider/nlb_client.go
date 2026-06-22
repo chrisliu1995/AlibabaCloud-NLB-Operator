@@ -60,6 +60,10 @@ func (c *NLBClient) CreateLoadBalancer(ctx context.Context, nlb *nlbv1.NLB) (str
 		AddressType:      tea.String(nlb.Spec.AddressType),
 		VpcId:            tea.String(nlb.Spec.VpcId),
 		ZoneMappings:     []*nlbsdk.CreateLoadBalancerRequestZoneMappings{},
+		// ClientToken bound to NLB CR UID ensures Aliyun API idempotence:
+		// reconcile retries (e.g. after a Status().Update optimistic-lock conflict)
+		// reuse the same NLB instance instead of creating duplicates.
+		ClientToken: tea.String(string(nlb.UID)),
 	}
 
 	if nlb.Spec.AddressIpVersion != "" {
